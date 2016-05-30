@@ -13,6 +13,7 @@ const isDev = NODE_ENV === 'development';
 // alternatively, we can use process.argv[1]
 // const isDev = (process.argv[1] || '')
 //                .indexOf('hjs-dev-server') !== -1;
+const isTest = NODE_ENV === 'test';
 
 const root      = resolve(__dirname);
 const src       = join(root, 'src');
@@ -25,6 +26,11 @@ var config = getConfig({
   out: dest,
   clearBeforeBuild: true
 });
+
+config.externals = {
+  'react/lib/ReactContext': true,
+  'react/lib/ExecutionEnvironment': true
+}
 
 /* BEGIN ENV variables */
 const dotEnvVars = dotenv.config();
@@ -102,5 +108,25 @@ config.resolve.alias = {
   'utils': join(src, 'utils')
 }
 /* END Roots */
+
+/* BEGIN test config */
+if (isTest) {
+  config.externals = {
+    'react/lib/ReactContext': true,
+    'react/lib/ExecutionEnvironment': true
+  }
+
+  config.plugins = config.plugins.filter(p => {
+    const name = p.constructor.toString();
+    const fnName = name.match(/^function (.*)\((.*\))/)
+
+    const idx = [
+      'DedupePlugin',
+      'UglifyJsPlugin'
+    ].indexOf(fnName[1]);
+    return idx < 0;
+  })
+}
+/* END test config */
 
 module.exports = config;
