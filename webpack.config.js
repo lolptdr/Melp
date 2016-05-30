@@ -22,6 +22,6 @@ var config = getConfig({
   in: join(src, 'app.js'),
   out: dest,
   clearBeforeBuild: true
-})
+});
 
 module.exports = config;
