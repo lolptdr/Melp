@@ -1,3 +1,6 @@
+const NODE_ENV = process.env.NODE_ENV;
+const dotenv = require('dotenv');
+
 const webpack = require('webpack');
 const fs      = require('fs');
 const path    = require('path');
@@ -5,17 +8,16 @@ const path    = require('path');
       resolve = path.resolve;
 
 const getConfig = require('hjs-webpack');
-const root      = resolve(__dirname);
-const src       = join(root, 'src');
-const modules   = join(root, 'node_modules');
-const dest      = join(root, 'dist');
 
-const NODE_ENV = process.env.NODE_ENV;
-const dotenv = require('dotenv');
 const isDev = NODE_ENV === 'development';
 // alternatively, we can use process.argv[1]
 // const isDev = (process.argv[1] || '')
 //                .indexOf('hjs-dev-server') !== -1;
+
+const root      = resolve(__dirname);
+const src       = join(root, 'src');
+const modules   = join(root, 'node_modules');
+const dest      = join(root, 'dist');
 
 var config = getConfig({
   isDev: isDev,
@@ -24,6 +26,7 @@ var config = getConfig({
   clearBeforeBuild: true
 });
 
+/* BEGIN ENV variables */
 const dotEnvVars = dotenv.config();
 const environmentEnv = dotenv.config({
   path: join(root, 'config', `${NODE_ENV}.config.js`),
@@ -46,6 +49,7 @@ const defines =
 config.plugins = [
   new webpack.DefinePlugin(defines)
 ].concat(config.plugins);
+/* END ENV variables */
 
 /* BEGIN CSS modules */
 const cssModulesNames = `${isDev ? '[path][name]__[local]__' : ''}[hash:base64:5]`;
@@ -88,5 +92,15 @@ config.postcss = [].concat([
   require('cssnano')({})
 ])
 /* END postcss */
+
+/* BEGIN Roots */
+config.resolve.root = [src, modules]
+config.resolve.alias = {
+  'css': join(src, 'styles'),
+  'containers': join(src, 'containers'),
+  'components': join(src, 'components'),
+  'utils': join(src, 'utils')
+}
+/* END Roots */
 
 module.exports = config;
